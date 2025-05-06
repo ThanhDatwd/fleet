@@ -17,6 +17,7 @@ import (
 	"golang.org/x/text/unicode/norm"
 	"gopkg.in/yaml.v2"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/fleetdm/fleet/v4/pkg/optjson"
 	"github.com/fleetdm/fleet/v4/pkg/spec"
 	"github.com/fleetdm/fleet/v4/server/contexts/ctxerr"
@@ -433,6 +434,8 @@ func (c *Client) ApplyGroup(
 		}
 	}
 
+	spew.Dump(specs)
+
 	// specs.Queries must be applied before specs.Packs because packs reference queries.
 	if len(specs.Queries) > 0 {
 		if opts.DryRun {
@@ -563,6 +566,15 @@ func (c *Client) ApplyGroup(
 			logfn("[+] would've applied fleet config\n")
 		} else {
 			logfn("[+] applied fleet config\n")
+		}
+
+		if viaGitOps && (windowsCustomSettings == nil || macosCustomSettings == nil) {
+			if windowsCustomSettings == nil {
+				windowsCustomSettings = []fleet.MDMProfileSpec{}
+			}
+			if macosCustomSettings == nil {
+				macosCustomSettings = []fleet.MDMProfileSpec{}
+			}
 		}
 
 		// We apply profiles after the main AppConfig org_settings because profiles may
@@ -1786,6 +1798,7 @@ func (c *Client) DoGitOps(
 			mdmAppConfig["macos_settings"] = config.Controls.MacOSSettings
 		} else {
 			mdmAppConfig["macos_settings"] = fleet.MacOSSettings{}
+			spew.Dump(mdmAppConfig["macos_settings"])
 		}
 		// Put in default values for macos_updates
 		if config.Controls.MacOSUpdates != nil {
